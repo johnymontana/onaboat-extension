@@ -51,4 +51,8 @@ public class BoatNode {
     public void setTimestamp(Long timestamp) {
         this.timestamp = timestamp;
     }
+
+    public Long getTimestamp() {
+        return this.timestamp;
+    }
 }
