@@ -6,7 +6,7 @@ public class BoatNode {
     public Double x;
     public Double y;
     public Double z;
-    public Long timestamp;
+    public Double timestamp;
 
     public void setLat(Double lat) {
         this.lat = lat;
@@ -48,11 +48,11 @@ public class BoatNode {
         return this.z;
     }
 
-    public void setTimestamp(Long timestamp) {
+    public void setTimestamp(Double timestamp) {
         this.timestamp = timestamp;
     }
 
-    public Long getTimestamp() {
+    public Double getTimestamp() {
         return this.timestamp;
     }
 }
