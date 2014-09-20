@@ -27,7 +27,8 @@ public class MyService {
 
     enum Labels implements Label {
         Business,
-        Person
+        Person,
+        Boat
     }
 
     enum RelTypes implements RelationshipType {
@@ -38,6 +39,36 @@ public class MyService {
     @Path("/helloworld")
     public String helloWorld() {
         return "Hello World!";
+    }
+
+    @POST
+    @Path("/onaboat/observation")
+    public Response addBoatObservation(String boatData, @Context GraphDatabaseService db) {
+        SpatialDatabaseService spatialDB = new SpatialDatabaseService(db);
+
+        Gson gson = new Gson();
+        BoatNode boat = gson.fromJson(boatData, BoatNode.class);
+
+        Node boatNode;
+        try (Transaction tx = db.beginTx()) {
+            boatNode = db.createNode();
+            boatNode.addLabel(Labels.Boat);
+            boatNode.setProperty("lat", boat.getLat());
+            boatNode.setProperty("lon", boat.getLon());
+            boatNode.setProperty("x", boat.getX());
+            boatNode.setProperty("y", boat.getY());
+            boatNode.setProperty("z", boat.getZ());
+            boatNode.setProperty("timestamp", boat.getTimestamp());
+            tx.success();
+        }
+
+        try (Transaction tx = db.beginTx()) {
+            Layer boatLayer = spatialDB.getOrCreatePointLayer("boat", "lat", "lon");
+            boatLayer.add(boatNode);
+            tx.success();
+        }
+
+        return Response.ok().build();
     }
 
     @POST
