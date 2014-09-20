@@ -71,6 +71,40 @@ public class MyService {
         return Response.ok().build();
     }
 
+    @GET
+    @Path("/onaboat/intersects/")
+    public Response getBoatsInPolygon(@QueryParam("polygon") String polygon,
+                                      @Context GraphDatabaseService db) throws IOException, ParseException{
+        WKTReader wktreader = new WKTReader();
+
+        ArrayList<Object> resultsArray = new ArrayList();
+
+        SpatialDatabaseService spatialDB = new SpatialDatabaseService(db);
+        Layer boatLayer = spatialDB.getOrCreatePointLayer("boat", "lat", "lon");
+        SpatialIndexReader spatialIndex = boatLayer.getIndex();
+
+        SearchIntersect searchQuery = new SearchIntersect(boatLayer, wktreader.read(polygon));
+
+        try (Transaction tx = db.beginTx()) {
+            SearchResults results = spatialIndex.searchIndex(searchQuery);
+
+            for (Node boat : results) {
+                HashMap<String, Object> geojson = new HashMap<>();
+                geojson.put("lat", boat.getProperty("lat"));
+                geojson.put("lon", boat.getProperty("lon"));
+                geojson.put("x", boat.getProperty("x"));
+                geojson.put("y", boat.getProperty("y"));
+                geojson.put("z", boat.getProperty("z"));
+                geojson.put("timestamp", boat.getProperty("timestamp"));
+                resultsArray.add(geojson);
+            }
+            tx.success();
+        }
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        return Response.ok().entity(objectMapper.writeValueAsString(resultsArray)).build();
+    }
+
     @POST
     @Path("/node")
     public Response addNode(String nodeParamsJson, @Context GraphDatabaseService db) {
